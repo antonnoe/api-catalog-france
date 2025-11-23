@@ -1,107 +1,95 @@
 /* ============================================================
-   API-HUB FRANKRIJK
-   Centrale fetch-module voor alle API’s
-   – BAN (adres)
-   – Géo API (communes)
-   – Géorisques (risico’s)
+   BASIS API-HUB SCRIPT — MATCHT EXACT JOUW HTML IDs
    ============================================================ */
 
-/* -----------------------------
-   1) Gemeente → INSEE lookup
-------------------------------*/
-async function fetchCommuneInfo(communeName) {
-    const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(communeName)}&limit=5`;
+/* --------------------------
+   1) BAN Adreszoeker
+---------------------------*/
+document.getElementById("ban-btn").addEventListener("click", async () => {
+    const query = document.getElementById("ban-input").value.trim();
+    const out = document.getElementById("ban-results");
+
+    if (!query) {
+        out.innerHTML = "<p>Voer een adres of plaatsnaam in.</p>";
+        return;
+    }
+
+    out.innerHTML = "<p>Zoeken…</p>";
+
+    const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}`;
 
     try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return null;
 
-        return data[0]; // beste match
-    } catch (err) {
-        console.error("Fout bij commune-lookup:", err);
-        return null;
+        if (!data.features || data.features.length === 0) {
+            out.innerHTML = "<p>Geen resultaten gevonden.</p>";
+            return;
+        }
+
+        out.innerHTML = data.features
+            .map(f => `<p><strong>${f.properties.label}</strong><br>Lat/Lon: ${f.geometry.coordinates}</p>`)
+            .join("");
+
+    } catch (e) {
+        out.innerHTML = "<p>Fout bij opvragen.</p>";
+        console.error(e);
     }
-}
-
-/* -----------------------------
-   2) Géorisques risico’s
-   op basis van INSEE-code
-------------------------------*/
-async function fetchRisques(inseeCode) {
-    const url = `https://georisques.gouv.fr/api/v2/communes/${inseeCode}/risques`;
-
-    try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-        return data.risques || [];
-    } catch (err) {
-        console.error("Fout bij risico-opvragen:", err);
-        return [];
-    }
-}
+});
 
 /* -----------------------------------------
-   3) Gecombineerde workflow
-   (input → gemeente → INSEE → risico’s)
+   2) Commune lookup → Géorisques risico’s
 ------------------------------------------*/
-async function handleRisquesLookup() {
+async function fetchCommuneInfo(name) {
+    const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(name)}&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.length) return null;
+    return data[0]; // beste match
+}
+
+async function fetchRisques(insee) {
+    const url = `https://georisques.gouv.fr/api/v2/communes/${insee}/risques`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.risques || [];
+}
+
+document.getElementById("geo-btn").addEventListener("click", async () => {
     const input = document.getElementById("geo-input").value.trim();
-    const output = document.getElementById("geo-output");
+    const out = document.getElementById("geo-results");
 
     if (!input) {
-        output.innerHTML = "<p>Voer een gemeentenaam in.</p>";
+        out.innerHTML = "<p>Voer een gemeentenaam in.</p>";
         return;
     }
 
-    output.innerHTML = "<p>Zoeken…</p>";
+    out.innerHTML = "<p>Zoeken…</p>";
 
-    // 1) Gemeente zoeken → INSEE
     const commune = await fetchCommuneInfo(input);
     if (!commune) {
-        output.innerHTML = `<p>Geen gemeente gevonden voor <strong>${input}</strong>.</p>`;
+        out.innerHTML = `<p>Geen gemeente gevonden voor: ${input}</p>`;
         return;
     }
 
-    const insee = commune.code;
-    const name = commune.nom;
+    const risques = await fetchRisques(commune.code);
 
-    // 2) Risico’s ophalen
-    const risques = await fetchRisques(insee);
-
-    // 3) Output opbouwen
-    let html = `
-        <h3>${name} (INSEE ${insee})</h3>
-        <p><strong>Bron:</strong> Géorisques – API v2</p>
-    `;
+    let html = `<h3>${commune.nom} (INSEE ${commune.code})</h3>`;
 
     if (risques.length === 0) {
-        html += `<p>Geen geregistreerde risico’s voor deze gemeente.</p>`;
+        html += "<p>Geen risico’s beschikbaar.</p>";
     } else {
-        html += `<ul>`;
-        for (const r of risques) {
+        html += "<ul>";
+        risques.forEach(r => {
             html += `
                 <li>
                     <strong>${r.categorie || "Onbekend"}</strong><br>
-                    Risico: ${r.risque || "n.v.t."}<br>
+                    ${r.risque || "Geen titel"}<br>
                     Code: ${r.code || "–"}
-                </li>
-            `;
-        }
-        html += `</ul>`;
+                </li>`;
+        });
+        html += "</ul>";
     }
 
-    output.innerHTML = html;
-}
-
-/* ------------------------------
-   4) Event Listener
--------------------------------*/
-document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("geo-btn");
-    if (btn) btn.addEventListener("click", handleRisquesLookup);
+    out.innerHTML = html;
 });
