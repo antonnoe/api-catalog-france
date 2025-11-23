@@ -1,5 +1,5 @@
 // script.js
-// Catalogus + categorie-filter + BAN + Géorisques (met veilige velden)
+// Catalogus + categorie-filter + BAN adreszoeker + Géorisques v2 (gemeentenaam → INSEE → risico's)
 
 let API_DATA = [];
 
@@ -16,39 +16,38 @@ async function loadAPIs() {
         renderAPIList(API_DATA);
 
     } catch (err) {
-        console.error("Fout bij laden apis.json:", err);
         document.getElementById("api-list").innerHTML =
             "<p style='color:red;'>Fout: apis.json kon niet worden geladen.</p>";
     }
 }
 
 /* ============================================================
-   2. Dropdown vullen
+   2. Categorie-filter vullen
    ============================================================ */
 function populateCategoryFilter(apis) {
     const select = document.getElementById("category-filter");
-    const categories = [...new Set(apis.map(api => api.category))];
+    const categories = [...new Set(apis.map(a => a.category))];
 
     categories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        select.appendChild(option);
+        const o = document.createElement("option");
+        o.value = cat;
+        o.textContent = cat;
+        select.appendChild(o);
     });
 
     select.addEventListener("change", () => {
-        const value = select.value;
-        if (value === "all") renderAPIList(API_DATA);
-        else renderAPIList(API_DATA.filter(a => a.category === value));
+        const v = select.value;
+        if (v === "all") renderAPIList(API_DATA);
+        else renderAPIList(API_DATA.filter(a => a.category === v));
     });
 }
 
 /* ============================================================
-   3. API-kaarten renderen
+   3. Catalogus renderen
    ============================================================ */
 function renderAPIList(apis) {
-    const container = document.getElementById("api-list");
-    container.innerHTML = "";
+    const c = document.getElementById("api-list");
+    c.innerHTML = "";
 
     apis.forEach(api => {
         const card = document.createElement("div");
@@ -61,12 +60,12 @@ function renderAPIList(apis) {
             <a class="btn" href="${api.documentation_url}" target="_blank">Open documentatie</a>
         `;
 
-        container.appendChild(card);
+        c.appendChild(card);
     });
 }
 
 /* ============================================================
-   4. BAN Adreszoeker
+   4. BAN Adreszoeker (blijft zoals hij werkt)
    ============================================================ */
 document.getElementById("ban-btn").addEventListener("click", runBANSearch);
 
@@ -79,48 +78,46 @@ async function runBANSearch() {
         return;
     }
 
-    out.innerHTML = "<p>Bezig met zoeken…</p>";
+    out.innerHTML = "Bezig met zoeken…";
 
     try {
         const url = "https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(q);
-        const response = await fetch(url);
-        const data = await response.json();
+        const r = await fetch(url);
+        const d = await r.json();
 
-        if (!data.features || data.features.length === 0) {
+        if (!d.features?.length) {
             out.innerHTML = "<p>Geen resultaten.</p>";
             return;
         }
 
-        let html = `<p><strong>Bron:</strong> Base Adresse Nationale</p><ul>`;
+        let html = "<p><strong>Bron:</strong> BAN (Base Adresse Nationale)</p><ul>";
 
-        data.features.forEach(item => {
-            const p = item.properties;
-            const coords = item.geometry.coordinates;
-
+        d.features.forEach(f => {
+            const p = f.properties;
+            const c = f.geometry.coordinates;
             html += `
                 <li>
                     <strong>${p.label}</strong><br>
                     Score: ${p.score}<br>
-                    Long: ${coords[0]} — Lat: ${coords[1]}
+                    Long: ${c[0]} — Lat: ${c[1]}
                 </li>
             `;
         });
 
-        html += `</ul>`;
+        html += "</ul>";
         out.innerHTML = html;
 
     } catch (err) {
-        console.error(err);
         out.innerHTML = "<p style='color:red;'>Fout bij BAN API.</p>";
     }
 }
 
 /* ============================================================
-   5. Géorisques — naam → INSEE → risico's (met robuuste velden)
+   5. Géorisques v2 — Gemeentenaam → INSEE → risico's
    ============================================================ */
-document.getElementById("geo-btn").addEventListener("click", runGeoFromName);
+document.getElementById("geo-btn").addEventListener("click", runGeoV2);
 
-async function runGeoFromName() {
+async function runGeoV2() {
     const name = document.getElementById("geo-input").value.trim();
     const out = document.getElementById("geo-results");
 
@@ -129,60 +126,74 @@ async function runGeoFromName() {
         return;
     }
 
-    out.innerHTML = "<p>Gemeente opzoeken…</p>";
+    out.innerHTML = "Gemeente zoeken…";
 
     try {
-        // 1) Lookup gemeentenaam → INSEE
-        const gUrl = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(name)}&fields=nom,code&limit=1`;
-        const gResponse = await fetch(gUrl);
-        const gData = await gResponse.json();
+        /* ----------------------------------------------
+           1) Zoek INSEE-code via geo.api.gouv.fr
+        ---------------------------------------------- */
+        const lookupUrl =
+            `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(name)}&fields=nom,code&limit=1`;
 
-        if (!gData || gData.length === 0) {
+        const r1 = await fetch(lookupUrl);
+        const communes = await r1.json();
+
+        if (!communes.length) {
             out.innerHTML = "<p style='color:red;'>Gemeente niet gevonden.</p>";
             return;
         }
 
-        const insee = gData[0].code;
-        const officialName = gData[0].nom;
+        const insee = communes[0].code;
+        const official = communes[0].nom;
 
-        out.innerHTML = `<p>INSEE-code gevonden: <strong>${insee}</strong> (${officialName})<br>Risico’s ophalen…</p>`;
+        out.innerHTML = `Gemeente gevonden: <strong>${official}</strong> (INSEE ${insee})<br>Risico’s ophalen…`;
 
-        // 2) Géorisques opvragen
-        const url = `https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=${insee}`;
-        const response = await fetch(url);
-        const data = await response.json();
+        /* ----------------------------------------------
+           2) V2 Risico-API aanroepen
+           Endpoint: /api/v2/communes/{INSEE}/risques
+        ---------------------------------------------- */
+        const riskUrl = `https://georisques.gouv.fr/api/v2/communes/${insee}/risques`;
+        const r2 = await fetch(riskUrl);
+        const data = await r2.json();
 
-        if (!data.data || data.data.length === 0) {
-            out.innerHTML = `<p>Geen risico’s gevonden voor ${officialName}.</p>`;
+        if (!data.risques?.length) {
+            out.innerHTML = `<p>Geen risico’s gevonden voor ${official}.</p>`;
             return;
         }
 
+        /* ----------------------------------------------
+           3) Correcte velden v2:
+              - nom_risque
+              - code_risque
+              - categorie_risque
+              - id_risque
+        ---------------------------------------------- */
         let html = `
-            <p><strong>Gemeente:</strong> ${officialName}</p>
-            <p><strong>Bron:</strong> Géorisques (BRGM)</p>
+            <p><strong>Gemeente:</strong> ${official}</p>
+            <p><strong>Bron:</strong> Géorisques — API v2</p>
             <ul>
         `;
 
-        data.data.forEach(r => {
+        data.risques.forEach(r => {
             html += `
                 <li>
-                    <strong>${r.nom_risque || "Risico"}</strong><br>
-                    Categorie: ${r.categorie || "Onbekend"}<br>
-                    Code: ${r.code_risque || "n.v.t."}
+                    <strong>${r.nom_risque}</strong><br>
+                    Categorie: ${r.categorie_risque}<br>
+                    Code: ${r.code_risque}<br>
+                    ID: ${r.id_risque}
                 </li>
             `;
         });
 
-        html += `</ul>`;
+        html += "</ul>";
         out.innerHTML = html;
 
     } catch (err) {
-        console.error(err);
-        out.innerHTML = "<p style='color:red;'>Fout bij het ophalen van risico’s.</p>";
+        out.innerHTML = "<p style='color:red;'>Fout bij Géorisques API.</p>";
     }
 }
 
 /* ============================================================
-   Start
+   Starten
    ============================================================ */
 loadAPIs();
