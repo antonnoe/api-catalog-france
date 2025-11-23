@@ -1,30 +1,36 @@
-const DATA = [
-    {
-        name: "API Adresse – BAN",
-        description: "Officiële adres-API van de Franse overheid.",
-        url: "https://api-adresse.data.gouv.fr/search/"
-    },
-    {
-        name: "Géorisques – Risicozones",
-        description: "Overstroming, seismische zones, grondverzakking.",
-        url: "https://www.georisques.gouv.fr/api"
+// script.js
+// Laadt apis.json en rendert dynamisch de catalogus
+
+async function loadAPIs() {
+    try {
+        const response = await fetch("/apis.json");
+        const data = await response.json();
+        renderAPIList(data.apis);
+    } catch (err) {
+        console.error("Fout bij laden apis.json:", err);
+        document.getElementById("api-list").innerHTML =
+            "<p style='color:red;'>Fout: apis.json kon niet worden geladen.</p>";
     }
-];
+}
 
-function render() {
-    const out = document.getElementById("results");
-    out.innerHTML = "";
+function renderAPIList(apis) {
+    const container = document.getElementById("api-list");
+    container.innerHTML = ""; // leegmaken
 
-    DATA.forEach(api => {
-        const div = document.createElement("div");
-        div.className = "api-item";
-        div.innerHTML = `
+    apis.forEach(api => {
+        const card = document.createElement("div");
+        card.className = "api-card";
+
+        card.innerHTML = `
             <h3>${api.name}</h3>
             <p>${api.description}</p>
-            <a href="${api.url}" target="_blank">Open documentatie</a>
+            <p><strong>Categorie:</strong> ${api.category}</p>
+            <a class="btn" href="${api.documentation_url}" target="_blank">Open documentatie</a>
         `;
-        out.appendChild(div);
+
+        container.appendChild(card);
     });
 }
 
-render();
+// Start
+loadAPIs();
