@@ -1,18 +1,17 @@
 // script.js
-// Dynamische catalogus + categorie-filter + BAN adreszoeker
+// Catalogus + categorie-filter + BAN + Géorisques
 
 let API_DATA = [];
 
-// ------------------------------------------------
-// Laad apis.json en start de interface
-// ------------------------------------------------
+/* ============================================================
+   1. API-Catalogus laden uit apis.json
+   ============================================================ */
 async function loadAPIs() {
     try {
         const response = await fetch("/apis.json");
         const data = await response.json();
 
         API_DATA = data.apis;
-
         populateCategoryFilter(API_DATA);
         renderAPIList(API_DATA);
 
@@ -23,9 +22,9 @@ async function loadAPIs() {
     }
 }
 
-// ------------------------------------------------
-// Filter-dropdown automatisch vullen
-// ------------------------------------------------
+/* ============================================================
+   2. Dropdown-vulling
+   ============================================================ */
 function populateCategoryFilter(apis) {
     const select = document.getElementById("category-filter");
     const categories = [...new Set(apis.map(api => api.category))];
@@ -37,25 +36,19 @@ function populateCategoryFilter(apis) {
         select.appendChild(option);
     });
 
-    // Wanneer gebruiker filter verandert
     select.addEventListener("change", () => {
         const value = select.value;
-
-        if (value === "all") {
-            renderAPIList(API_DATA);
-        } else {
-            const filtered = API_DATA.filter(a => a.category === value);
-            renderAPIList(filtered);
-        }
+        if (value === "all") renderAPIList(API_DATA);
+        else renderAPIList(API_DATA.filter(a => a.category === value));
     });
 }
 
-// ------------------------------------------------
-// API-kaarten genereren
-// ------------------------------------------------
+/* ============================================================
+   3. API-kaarten renderen
+   ============================================================ */
 function renderAPIList(apis) {
     const container = document.getElementById("api-list");
-    container.innerHTML = ""; // wis huidige inhoud
+    container.innerHTML = "";
 
     apis.forEach(api => {
         const card = document.createElement("div");
@@ -72,58 +65,103 @@ function renderAPIList(apis) {
     });
 }
 
-// ------------------------------------------------
-// BAN API - adreszoeker
-// ------------------------------------------------
+/* ============================================================
+   4. BAN Adreszoeker
+   ============================================================ */
 document.getElementById("ban-btn").addEventListener("click", runBANSearch);
 
 async function runBANSearch() {
-    const input = document.getElementById("ban-input").value.trim();
-    const resultsContainer = document.getElementById("ban-results");
+    const q = document.getElementById("ban-input").value.trim();
+    const out = document.getElementById("ban-results");
 
-    if (!input) {
-        resultsContainer.innerHTML = "<p style='color:red;'>Vul een adres of zoekterm in.</p>";
+    if (!q) {
+        out.innerHTML = "<p style='color:red;'>Voer een zoekterm in.</p>";
         return;
     }
 
-    resultsContainer.innerHTML = "<p>Bezig met zoeken…</p>";
+    out.innerHTML = "<p>Bezig met zoeken…</p>";
 
     try {
-        const url = "https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(input);
+        const url = "https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(q);
         const response = await fetch(url);
         const data = await response.json();
 
         if (!data.features || data.features.length === 0) {
-            resultsContainer.innerHTML = "<p>Geen resultaten gevonden.</p>";
+            out.innerHTML = "<p>Geen resultaten.</p>";
             return;
         }
 
-        // Toon resultaten
-        let html = `<p><strong>Bron:</strong> BAN – Base Adresse Nationale</p>`;
-        html += `<ul>`;
+        let html = `<p><strong>Bron:</strong> Base Adresse Nationale</p><ul>`;
 
         data.features.forEach(item => {
-            const props = item.properties;
+            const p = item.properties;
+            const coords = item.geometry.coordinates;
+
             html += `
                 <li>
-                    <strong>${props.label}</strong><br>
-                    Score: ${props.score}<br>
-                    Longitude: ${item.geometry.coordinates[0]}, 
-                    Latitude: ${item.geometry.coordinates[1]}
+                    <strong>${p.label}</strong><br>
+                    Score: ${p.score}<br>
+                    Long: ${coords[0]} — Lat: ${coords[1]}
                 </li>
             `;
         });
 
         html += `</ul>`;
-        resultsContainer.innerHTML = html;
+        out.innerHTML = html;
 
     } catch (err) {
         console.error(err);
-        resultsContainer.innerHTML = "<p style='color:red;'>Fout bij opvragen van de BAN API.</p>";
+        out.innerHTML = "<p style='color:red;'>Fout bij BAN API.</p>";
     }
 }
 
-// ------------------------------------------------
-// Start de catalogus
-// ------------------------------------------------
+/* ============================================================
+   5. Géorisques — risico's per gemeente (INSEE-code)
+   ============================================================ */
+document.getElementById("geo-btn").addEventListener("click", runGeoSearch);
+
+async function runGeoSearch() {
+    const code = document.getElementById("geo-input").value.trim();
+    const out = document.getElementById("geo-results");
+
+    if (!code.match(/^[0-9]{5}$/)) {
+        out.innerHTML = "<p style='color:red;'>Voer een geldige INSEE-code in (5 cijfers).</p>";
+        return;
+    }
+
+    out.innerHTML = "<p>Risico’s ophalen…</p>";
+
+    try {
+        const url = `https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=${code}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.data || data.data.length === 0) {
+            out.innerHTML = "<p>Geen risico’s gevonden.</p>";
+            return;
+        }
+
+        let html = `<p><strong>Bron:</strong> Géorisques (BRGM)</p><ul>`;
+
+        data.data.forEach(r => {
+            html += `
+                <li>
+                    <strong>${r.nom_court}</strong><br>
+                    ${r.risque}
+                </li>
+            `;
+        });
+
+        html += `</ul>`;
+        out.innerHTML = html;
+
+    } catch (err) {
+        console.error(err);
+        out.innerHTML = "<p style='color:red;'>Fout bij het ophalen van risico’s.</p>";
+    }
+}
+
+/* ============================================================
+   Start
+   ============================================================ */
 loadAPIs();
