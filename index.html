@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>API Catalogus Frankrijk</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Catalogus Frankrijk</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<h1>API Catalogus Frankrijk</h1>
-<p>Live testinterface</p>
+    <h1>API Catalogus Frankrijk</h1>
+    <p>Live testinterface — alle API-informatie wordt automatisch geladen uit apis.json.</p>
 
-<div id="results"></div>
+    <!-- FILTER BLOK -->
+    <div id="filters">
+        <label for="category-filter">Categorie:</label>
+        <select id="category-filter">
+            <option value="all">Alles</option>
+        </select>
+    </div>
 
-<script src="script.js"></script>
+    <!-- API-LIJST -->
+    <div id="api-list"></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
