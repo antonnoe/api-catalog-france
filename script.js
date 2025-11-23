@@ -1,5 +1,5 @@
 // script.js
-// Dynamische catalogus + categorie-filter
+// Dynamische catalogus + categorie-filter + BAN adreszoeker
 
 let API_DATA = [];
 
@@ -37,7 +37,7 @@ function populateCategoryFilter(apis) {
         select.appendChild(option);
     });
 
-    // Wanneer de gebruiker van categorie wisselt → filteren
+    // Wanneer gebruiker filter verandert
     select.addEventListener("change", () => {
         const value = select.value;
 
@@ -70,6 +70,57 @@ function renderAPIList(apis) {
 
         container.appendChild(card);
     });
+}
+
+// ------------------------------------------------
+// BAN API - adreszoeker
+// ------------------------------------------------
+document.getElementById("ban-btn").addEventListener("click", runBANSearch);
+
+async function runBANSearch() {
+    const input = document.getElementById("ban-input").value.trim();
+    const resultsContainer = document.getElementById("ban-results");
+
+    if (!input) {
+        resultsContainer.innerHTML = "<p style='color:red;'>Vul een adres of zoekterm in.</p>";
+        return;
+    }
+
+    resultsContainer.innerHTML = "<p>Bezig met zoeken…</p>";
+
+    try {
+        const url = "https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(input);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.features || data.features.length === 0) {
+            resultsContainer.innerHTML = "<p>Geen resultaten gevonden.</p>";
+            return;
+        }
+
+        // Toon resultaten
+        let html = `<p><strong>Bron:</strong> BAN – Base Adresse Nationale</p>`;
+        html += `<ul>`;
+
+        data.features.forEach(item => {
+            const props = item.properties;
+            html += `
+                <li>
+                    <strong>${props.label}</strong><br>
+                    Score: ${props.score}<br>
+                    Longitude: ${item.geometry.coordinates[0]}, 
+                    Latitude: ${item.geometry.coordinates[1]}
+                </li>
+            `;
+        });
+
+        html += `</ul>`;
+        resultsContainer.innerHTML = html;
+
+    } catch (err) {
+        console.error(err);
+        resultsContainer.innerHTML = "<p style='color:red;'>Fout bij opvragen van de BAN API.</p>";
+    }
 }
 
 // ------------------------------------------------
