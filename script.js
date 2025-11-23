@@ -1,5 +1,5 @@
 // script.js
-// Catalogus + categorie-filter + BAN + Géorisques (gemeentenaam → INSEE → risico's)
+// Catalogus + categorie-filter + BAN + Géorisques (met veilige velden)
 
 let API_DATA = [];
 
@@ -116,7 +116,7 @@ async function runBANSearch() {
 }
 
 /* ============================================================
-   5. Géorisques — naam → INSEE → risico's
+   5. Géorisques — naam → INSEE → risico's (met robuuste velden)
    ============================================================ */
 document.getElementById("geo-btn").addEventListener("click", runGeoFromName);
 
@@ -147,7 +147,7 @@ async function runGeoFromName() {
 
         out.innerHTML = `<p>INSEE-code gevonden: <strong>${insee}</strong> (${officialName})<br>Risico’s ophalen…</p>`;
 
-        // 2) Géorisques opvraging doen
+        // 2) Géorisques opvragen
         const url = `https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=${insee}`;
         const response = await fetch(url);
         const data = await response.json();
@@ -166,8 +166,9 @@ async function runGeoFromName() {
         data.data.forEach(r => {
             html += `
                 <li>
-                    <strong>${r.nom_court}</strong><br>
-                    ${r.risque}
+                    <strong>${r.nom_risque || "Risico"}</strong><br>
+                    Categorie: ${r.categorie || "Onbekend"}<br>
+                    Code: ${r.code_risque || "n.v.t."}
                 </li>
             `;
         });
