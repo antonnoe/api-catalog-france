@@ -1,0 +1,60 @@
+{
+  "generated_at": "2025-11-23T15:45:00+01:00",
+  "apis": [
+    {
+      "id": "ban",
+      "name": "API Adresse – BAN",
+      "category": "Geodata",
+      "description": "Officiële Franse adres-API: zoeken, geocoderen en omgekeerd geocoderen.",
+      "documentation_url": "https://adresse.data.gouv.fr/api",
+      "endpoint": "https://api-adresse.data.gouv.fr/search/?q=",
+      "example_request": "https://api-adresse.data.gouv.fr/search/?q=8+bd+du+port",
+      "source": "Base Adresse Nationale",
+      "license": "BAN Licence"
+    },
+    {
+      "id": "georisques",
+      "name": "Géorisques – Risicozones",
+      "category": "Risico & Veiligheid",
+      "description": "Informatie over overstromingen, seismische activiteit, grondverzakking en andere risico’s.",
+      "documentation_url": "https://www.georisques.gouv.fr/api",
+      "endpoint": "https://georisques.gouv.fr/api/v1/",
+      "example_request": "https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=75101",
+      "source": "BRGM / Ministère de la Transition Écologique",
+      "license": "Open Licence"
+    },
+    {
+      "id": "dvf",
+      "name": "DVF – Données de Valeurs Foncières",
+      "category": "Vastgoed",
+      "description": "Transacties van vastgoed in Frankrijk over de afgelopen 5 jaar. Prijzen per verkoop, kadastrale referenties.",
+      "documentation_url": "https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres/",
+      "endpoint": "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/demandes-de-valeurs-foncieres/records",
+      "example_request": "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/demandes-de-valeurs-foncieres/records?where=code_insee%3D%2762588%27&limit=10",
+      "source": "DGFiP / Etalab",
+      "license": "Licence Ouverte v2.0"
+    },
+    {
+      "id": "gpu",
+      "name": "Géoportail Urbanisme – Zonering & PLU",
+      "category": "Urbanisme",
+      "description": "Zonering, PLU-documenten, voorschriften voor bouwen en verbouwen.",
+      "documentation_url": "https://geoportail-urbanisme.gouv.fr/api",
+      "endpoint": "https://apicarto.ign.fr/api/gpu/document",
+      "example_request": "https://apicarto.ign.fr/api/gpu/document?partition=DU_75101",
+      "source": "IGN",
+      "license": "IGN Licence Ouverte"
+    },
+    {
+      "id": "sirene",
+      "name": "SIRENE – Bedrijfsregister",
+      "category": "Economie & Bedrijf",
+      "description": "Bedrijvenregister van alle Franse ondernemingen (KBO-equivalent).",
+      "documentation_url": "https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/item-info.jag?uuid=f8f8f3fa-e359-43b5-a1cd-f90a64f8a962",
+      "endpoint": "https://api.insee.fr/entreprises/sirene/V3/",
+      "example_request": "https://api.insee.fr/entreprises/sirene/V3/siret/41816609600069",
+      "source": "INSEE",
+      "license": "INSEE Licence"
+    }
+  ]
+}
