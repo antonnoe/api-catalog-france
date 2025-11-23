@@ -1,10 +1,10 @@
 // script.js
-// Catalogus + categorie-filter + BAN + Géorisques
+// Catalogus + categorie-filter + BAN + Géorisques (gemeentenaam → INSEE → risico's)
 
 let API_DATA = [];
 
 /* ============================================================
-   1. API-Catalogus laden uit apis.json
+   1. API-Catalogus laden
    ============================================================ */
 async function loadAPIs() {
     try {
@@ -23,7 +23,7 @@ async function loadAPIs() {
 }
 
 /* ============================================================
-   2. Dropdown-vulling
+   2. Dropdown vullen
    ============================================================ */
 function populateCategoryFilter(apis) {
     const select = document.getElementById("category-filter");
@@ -116,32 +116,52 @@ async function runBANSearch() {
 }
 
 /* ============================================================
-   5. Géorisques — risico's per gemeente (INSEE-code)
+   5. Géorisques — naam → INSEE → risico's
    ============================================================ */
-document.getElementById("geo-btn").addEventListener("click", runGeoSearch);
+document.getElementById("geo-btn").addEventListener("click", runGeoFromName);
 
-async function runGeoSearch() {
-    const code = document.getElementById("geo-input").value.trim();
+async function runGeoFromName() {
+    const name = document.getElementById("geo-input").value.trim();
     const out = document.getElementById("geo-results");
 
-    if (!code.match(/^[0-9]{5}$/)) {
-        out.innerHTML = "<p style='color:red;'>Voer een geldige INSEE-code in (5 cijfers).</p>";
+    if (!name) {
+        out.innerHTML = "<p style='color:red;'>Voer een gemeentenaam in.</p>";
         return;
     }
 
-    out.innerHTML = "<p>Risico’s ophalen…</p>";
+    out.innerHTML = "<p>Gemeente opzoeken…</p>";
 
     try {
-        const url = `https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=${code}`;
+        // 1) Lookup gemeentenaam → INSEE
+        const gUrl = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(name)}&fields=nom,code&limit=1`;
+        const gResponse = await fetch(gUrl);
+        const gData = await gResponse.json();
+
+        if (!gData || gData.length === 0) {
+            out.innerHTML = "<p style='color:red;'>Gemeente niet gevonden.</p>";
+            return;
+        }
+
+        const insee = gData[0].code;
+        const officialName = gData[0].nom;
+
+        out.innerHTML = `<p>INSEE-code gevonden: <strong>${insee}</strong> (${officialName})<br>Risico’s ophalen…</p>`;
+
+        // 2) Géorisques opvraging doen
+        const url = `https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee=${insee}`;
         const response = await fetch(url);
         const data = await response.json();
 
         if (!data.data || data.data.length === 0) {
-            out.innerHTML = "<p>Geen risico’s gevonden.</p>";
+            out.innerHTML = `<p>Geen risico’s gevonden voor ${officialName}.</p>`;
             return;
         }
 
-        let html = `<p><strong>Bron:</strong> Géorisques (BRGM)</p><ul>`;
+        let html = `
+            <p><strong>Gemeente:</strong> ${officialName}</p>
+            <p><strong>Bron:</strong> Géorisques (BRGM)</p>
+            <ul>
+        `;
 
         data.data.forEach(r => {
             html += `
