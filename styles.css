@@ -1,20 +1,56 @@
-/* Algemene layout */
+/* API Catalogus Frankrijk — statisch, geen frameworks.
+   Bordeaux (#800000) is de huisstijlkleur en wordt daarom nergens gebruikt om
+   een status of een gevaar aan te duiden: die twee betekenissen door elkaar
+   halen is precies hoe een kleur ophoudt informatie te dragen. */
+
 body {
-    font-family: Arial, sans-serif;
-    max-width: 900px;
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: 1180px;
     margin: 40px auto;
     padding: 0 20px;
     line-height: 1.5;
     color: #222;
 }
 
-/* Titel */
-h1 {
-    color: #800000;
-    margin-bottom: 10px;
+h1 { color: #800000; margin-bottom: 10px; }
+h2 { color: #800000; margin-top: 40px; border-bottom: 1px solid #e2e2e2; padding-bottom: 6px; }
+h3 { margin-top: 0; }
+
+.inleiding { max-width: 70ch; }
+
+.geen-sleutels {
+    max-width: 70ch;
+    background: #f4f7f4;
+    border-left: 3px solid #2f6b3a;
+    padding: 10px 14px;
+    font-size: 14px;
 }
 
-/* Filtersectie */
+/* ---------------------------------------------------------- portalen */
+
+.portaal-kaart {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 18px;
+    background: #fff;
+}
+
+.portaal-meta { color: #555; font-size: 14px; margin: 4px 0 10px; }
+.portaal-basepath code,
+.basepath code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    word-break: break-all;
+}
+.portaal-live { font-size: 14px; margin-top: 10px; }
+.portaal-verwijzing { font-size: 14px; color: #555; margin-top: 10px; }
+.gecontroleerd { font-size: 13px; color: #666; margin-bottom: 0; }
+
+/* ---------------------------------------------------------- filters */
+
 #filters {
     margin: 20px 0;
     padding: 12px;
@@ -23,41 +59,142 @@ h1 {
     border-radius: 6px;
 }
 
-#filters label {
-    margin-right: 10px;
-    font-weight: bold;
-}
+#filters label { margin-right: 8px; font-weight: bold; }
+#filters select { padding: 6px 10px; font-size: 14px; margin-right: 20px; }
 
-#filters select {
-    padding: 6px 10px;
+/* ---------------------------------------------------------- tabel */
+
+/* De tabel is breed; op een smal scherm mag hij binnen zijn eigen omhulsel
+   schuiven in plaats van de pagina mee te trekken. */
+.tabel-omhulsel { overflow-x: auto; }
+
+#api-tabel {
+    border-collapse: collapse;
+    width: 100%;
     font-size: 14px;
 }
 
-/* API-kaarten */
-.api-card {
-    border: 1px solid #ccc;
-    padding: 16px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    background: white;
+#api-tabel th,
+#api-tabel td {
+    border-bottom: 1px solid #e2e2e2;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
 }
 
-.api-card h3 {
-    margin-top: 0;
-    color: #800000;
+#api-tabel thead th {
+    background: #f6f6f6;
+    border-bottom: 2px solid #ccc;
+    white-space: nowrap;
 }
 
-.btn {
+.cel-naam strong { display: block; }
+.aanbieder { color: #666; font-size: 13px; }
+.cel-auth { max-width: 22ch; }
+.cel-gebruik div { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; }
+.cel-datum { white-space: nowrap; color: #555; }
+.ongebruikt { color: #888; font-style: italic; }
+
+/* Status. Groen/amber/rood dragen hier betekenis en zijn niet decoratief;
+   de tekst zelf staat er altijd bij, zodat de kleur nooit de enige drager is. */
+.status {
     display: inline-block;
-    margin-top: 8px;
-    padding: 8px 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    white-space: nowrap;
+}
+.status-werkt { background: #e6f2e8; color: #1f5129; }
+.status-ongetest { background: #fdf3dd; color: #7a5600; }
+.status-dood { background: #fbe6e6; color: #8c1717; }
+.status-onbekend { background: #eee; color: #555; }
+
+/* Abonnementseinde. Dezelfde drempel van 30 dagen die platform-monitor
+   aanhoudt, zodat de catalogus en het alarm hetzelfde zeggen. */
+.cel-einde { white-space: nowrap; }
+.cel-einde.bijna-op { color: #7a5600; font-weight: bold; }
+.cel-einde.verlopen { color: #8c1717; font-weight: bold; }
+.einde-notitie { font-weight: normal; font-size: 12.5px; }
+
+.detailrij > td {
+    background: #fafafa;
+    border-bottom: 2px solid #ddd;
+    padding-top: 4px;
+}
+
+.beschrijving { margin-top: 0; max-width: 80ch; }
+.basepath { font-size: 13px; }
+.basepath.leeg { color: #7a5600; }
+
+.laadfout { color: #8c1717; }
+
+/* ---------------------------------------------------------- uitklappers */
+
+.uitklap { margin: 8px 0; }
+
+.uitklap > summary {
+    cursor: pointer;
+    padding: 4px 0;
+    font-weight: bold;
+    font-size: 13.5px;
+}
+
+.uitklap > summary:hover { color: #800000; }
+
+.uitklap ul { margin: 6px 0 10px; padding-left: 22px; max-width: 90ch; }
+.uitklap li { margin-bottom: 5px; }
+.uitklap .leeg { color: #888; font-style: italic; font-size: 13px; }
+
+/* Valkuilen zijn de reden dat deze catalogus bestaat: ze krijgen een eigen
+   markering zodat ze in een rij uitklappers opvallen. */
+.uitklap.valkuilen > summary { color: #7a5600; }
+.uitklap.valkuilen ul { border-left: 3px solid #e0c168; padding-left: 26px; }
+
+.codebron {
+    font-size: 12.5px;
+    color: #555;
+    background: #f4f4f4;
+    padding: 8px 10px;
+    border-radius: 4px;
+    max-width: 90ch;
+}
+
+.codetabel { border-collapse: collapse; margin: 6px 0 14px; font-size: 13px; }
+.codetabel td { border-bottom: 1px solid #e8e8e8; padding: 4px 12px 4px 0; }
+.codetabel .code {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-weight: bold;
+    width: 4ch;
+}
+
+/* ---------------------------------------------------------- proeven */
+
+.proef {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 15px;
+    background: #fff;
+}
+
+.proef input {
+    padding: 7px 10px;
+    font-size: 14px;
+    width: min(360px, 100%);
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+.proef button {
+    padding: 8px 14px;
     background: #800000;
-    color: white;
-    text-decoration: none;
+    color: #fff;
+    border: 0;
     border-radius: 4px;
     font-size: 14px;
+    cursor: pointer;
 }
 
-.btn:hover {
-    opacity: 0.85;
-}
+.proef button:hover { opacity: 0.85; }
+.proef .coord { color: #666; font-size: 13px; }
+#ban-results, #geo-results { margin-top: 12px; }
