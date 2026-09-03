@@ -9,34 +9,80 @@
 <body>
 
     <h1>API Catalogus Frankrijk</h1>
-    <p>Live testinterface — alle API-informatie wordt automatisch geladen uit apis.json.</p>
+    <p class="inleiding">
+        Naslagwerk voor de Franse API&rsquo;s achter de tools van Communities Abroad. Niet alleen
+        wat een API doet, maar ook wat je moet weten <em>voordat</em> hij werkt: sleutelregels,
+        limieten, abonnementstermijnen en de valkuilen die anders een middag kosten.
+        Alles komt uit <code>apis.json</code>.
+    </p>
+    <p class="geen-sleutels">
+        In deze catalogus staat geen enkele sleutel, token of application-ID, ook niet
+        gedeeltelijk. Waar een sleutel nodig is, staat beschreven hoe je hem krijgt.
+    </p>
 
-    <!-- FILTER BLOK -->
-    <div id="filters">
-        <label for="category-filter">Categorie:</label>
-        <select id="category-filter">
-            <option value="all">Alles</option>
-        </select>
-    </div>
+    <!-- PORTALEN — sleutelregels die voor een hele groep API's gelden -->
+    <section id="portalen">
+        <h2>Portalen</h2>
+        <div id="portaal-lijst"></div>
+    </section>
 
-    <!-- BAN ADRESZOEKER -->
-    <div id="ban-search">
-        <h2>Zoek een adres (BAN API)</h2>
-        <input id="ban-input" type="text" placeholder="Bijv. 8 boulevard du Port, Paris" />
-        <button id="ban-btn">Zoeken</button>
-        <div id="ban-results"></div>
-    </div>
+    <!-- API-OVERZICHT -->
+    <section id="catalogus">
+        <h2>API&rsquo;s</h2>
 
-    <!-- GÉORISQUES — RISICOZONES OP GEMEENTE -->
-    <div id="geo-search">
-        <h2>Risicozones per gemeente (Géorisques API)</h2>
-        <input id="geo-input" type="text" placeholder="Bijv. 62588 voor Montreuil-sur-Mer" />
-        <button id="geo-btn">Check risico’s</button>
-        <div id="geo-results"></div>
-    </div>
+        <div id="filters">
+            <label for="category-filter">Categorie:</label>
+            <select id="category-filter">
+                <option value="all">Alles</option>
+            </select>
 
-    <!-- API-LIJST -->
-    <div id="api-list"></div>
+            <label for="status-filter">Status:</label>
+            <select id="status-filter">
+                <option value="all">Alles</option>
+                <option value="werkt">werkt</option>
+                <option value="ongetest">ongetest</option>
+                <option value="dood">dood</option>
+            </select>
+        </div>
+
+        <div class="tabel-omhulsel">
+            <table id="api-tabel">
+                <thead>
+                    <tr>
+                        <th scope="col">API</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Auth</th>
+                        <th scope="col">Limiet</th>
+                        <th scope="col">Abonnement loopt tot</th>
+                        <th scope="col">Gebruikt door</th>
+                        <th scope="col">Gecontroleerd</th>
+                    </tr>
+                </thead>
+                <tbody id="api-tabel-body"></tbody>
+            </table>
+        </div>
+
+        <p id="tabel-leeg" hidden>Geen API&rsquo;s die aan dit filter voldoen.</p>
+    </section>
+
+    <!-- LIVE TESTINTERFACES -->
+    <section id="proeven">
+        <h2>Uitproberen</h2>
+
+        <div id="ban-search" class="proef">
+            <h3>Zoek een adres (BAN)</h3>
+            <input id="ban-input" type="text" placeholder="Bijv. 8 boulevard du Port, Paris" />
+            <button id="ban-btn" type="button">Zoeken</button>
+            <div id="ban-results"></div>
+        </div>
+
+        <div id="geo-search" class="proef">
+            <h3>Risico&rsquo;s per gemeente (G&eacute;orisques)</h3>
+            <input id="geo-input" type="text" placeholder="Bijv. Montreuil-sur-Mer" />
+            <button id="geo-btn" type="button">Check risico&rsquo;s</button>
+            <div id="geo-results"></div>
+        </div>
+    </section>
 
     <script src="script.js"></script>
 </body>
