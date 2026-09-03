@@ -161,11 +161,34 @@ h3 { margin-top: 0; }
 
 .codetabel { border-collapse: collapse; margin: 6px 0 14px; font-size: 13px; }
 .codetabel td { border-bottom: 1px solid #e8e8e8; padding: 4px 12px 4px 0; }
+.status-toelichting {
+    font-size: 12px;
+    color: #7a5600;
+    margin-top: 4px;
+    max-width: 20ch;
+    line-height: 1.35;
+}
+
+.let-op {
+    font-size: 12.5px;
+    color: #7a5600;
+    background: #fdf7e6;
+    border-left: 3px solid #e0c168;
+    padding: 8px 10px;
+    max-width: 90ch;
+}
+
 .codetabel .code {
     font-family: ui-monospace, Menlo, Consolas, monospace;
     font-weight: bold;
     width: 4ch;
 }
+
+/* De vertaaltabel draagt dezelfde codetabel-klasse maar bevat namen in plaats
+   van losse cijfers. Deze regel moet NA .codetabel .code staan: bij gelijke
+   specificiteit wint de laatste, en andersom werden de namen op 4ch geperst. */
+.namentabel td { padding-right: 20px; }
+.namentabel .code { width: auto; white-space: nowrap; font-weight: normal; }
 
 /* ---------------------------------------------------------- proeven */
 

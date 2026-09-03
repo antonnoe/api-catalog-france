@@ -14,11 +14,9 @@
     "is gehouden, en status wat daar toen uitkwam. 'ongetest' is een eerlijk",
     "antwoord en geen tussenstand die je mag lezen als 'werkt waarschijnlijk wel'."
   ],
-
   "bijgewerktOp": "2026-09-03",
-
   "schema": {
-    "portalen": "Wat voor een hele groep API's geldt: sleuteluitgifte, headers, abonnementstermijnen. Eén keer beschreven, niet per API herhaald.",
+    "portalen": "Wat voor een hele groep API's geldt: sleuteluitgifte, headers, abonnementstermijnen, en de technische namen waarmee de basepaths worden opgebouwd. Eén keer beschreven, niet per API herhaald.",
     "apis": {
       "id": "korte unieke sleutel",
       "naam": "naam zoals de aanbieder hem noemt",
@@ -37,10 +35,10 @@
       "codetabellen": "vaste waardelijsten uit de documentatie, met bronvermelding",
       "gecontroleerdOp": "ISO-datum van de laatste controle",
       "status": "werkt | dood | ongetest",
-      "valkuilen": "korte notities over wat er misgaat als je dit niet weet"
+      "valkuilen": "korte notities over wat er misgaat als je dit niet weet",
+      "statusToelichting": "nuance bij status, wanneer 'werkt' op zichzelf zou misleiden; null wanneer er niets toe te lichten valt"
     }
   },
-
   "portalen": [
     {
       "id": "meteofrance",
@@ -66,14 +64,26 @@
       "basepathVorm": "https://public-api.meteofrance.fr/public/<technische naam>/v1",
       "liveVervaldata": "https://bosbranden.vercel.app/api/status/vervaldata",
       "valkuilen": [
-        "De technische naam in de URL wijkt af van de naam in de catalogus. Vigilance heet in de catalogus DonneesPubliquesVigilance, maar in de URL DPVigilance. Wie de catalogusnaam overneemt krijgt een 404 en zoekt in de verkeerde richting.",
+        "De technische naam in de URL wijkt af van de naam in de catalogus. Vigilance heet in de catalogus DonneesPubliquesVigilance, maar in de URL DPVigilance. Wie de catalogusnaam overneemt krijgt een 404 en zoekt in de verkeerde richting. De volledige vertaaltabel staat hierboven onder technischeNamen, met de portaal-API waar ze vandaan komt; lees hem daar af in plaats van hem te raden.",
         "Een sleutel die ouder is dan het abonnement geeft 403, niet 401. Dat leest als een rechtenprobleem bij de API, terwijl het abonnement gewoon goed staat en alleen de sleutel opnieuw gegenereerd hoeft te worden.",
         "De datums in het portaal staan in dd/mm/jjjj. 10/07/2028 is juli 2028, niet oktober."
       ],
-      "gecontroleerdOp": "2026-09-03"
+      "gecontroleerdOp": "2026-09-03",
+      "technischeNamen": {
+        "_bron": "De eigen API van het portaal: GET https://portail-api.meteofrance.fr/api/am/devportal/v3/apis?limit=200 (publiek, geen login nodig). Het veld 'context' van elke API geeft het pad zoals de runtime-host het kent. Afgelezen 2026-09-03. Dit is de plek om te kijken zodra je een basepath nodig hebt: de naam in de catalogus is niet de naam in de URL, en die van elkaar aflezen is de enige manier om niet te gokken.",
+        "_let_op": "Niet elke API staat op /v1. DonneesPubliquesObservation draait op v2. De versie hoort dus ook uit deze bron te komen en niet uit het patroon van de buren.",
+        "DonneesPubliquesVigilance": "/public/DPVigilance",
+        "DonneesPubliquesMeteoForets": "/public/DPMeteoForets",
+        "DonneesPubliquesClimatologie": "/public/DPClim",
+        "DonneesPubliquesObservation": "/public/DPObs (v2)",
+        "DonneesPubliquesBRA": "/public/DPBRA",
+        "DonneesPubliquesRadar": "/public/DPRadar",
+        "AROME": "/public/arome",
+        "ARPEGE": "/public/arpege",
+        "AROME-PI": "/public/aromepi"
+      }
     }
   ],
-
   "apis": [
     {
       "id": "mf-vigilance",
@@ -98,7 +108,10 @@
       "limiet": "60 requests per minuut",
       "abonnementseinde": "2028-07-10",
       "gebruiktDoor": [
-        { "repo": "antonnoe/bosbranden", "route": "/api/vigilance" }
+        {
+          "repo": "antonnoe/bosbranden",
+          "route": "/api/vigilance"
+        }
       ],
       "bronnen": [
         "https://vigilance.meteofrance.fr/fr",
@@ -135,7 +148,8 @@
         "Het tekstproduct gebruikt een ANDERE schaal dan de kaart: risk_level loopt van 0 (vert) tot 3 (rouge), color_id van 1 tot 4. Wie die twee verwisselt maakt van rood oranje.",
         "Een fenomeen dat niet in een departement staat is niet beoordeeld, nooit kleur 1. Afwezigheid is geen geruststelling.",
         "Crues (4) is hoogwater in rivieren, het domein van Vigicrues, en dus iets anders dan overstroming in het algemeen; vagues submersion (9) gaat over water dat vanaf zee komt. Implementaties van derden verwarren die twee, omdat ze de publiekscommunicatie volgen in plaats van deze veldnamen."
-      ]
+      ],
+      "statusToelichting": null
     },
     {
       "id": "mf-meteo-forets",
@@ -156,7 +170,10 @@
       "limiet": "100 requests per minuut",
       "abonnementseinde": "2028-07-07",
       "gebruiktDoor": [
-        { "repo": "antonnoe/bosbranden", "route": "/api/danger" }
+        {
+          "repo": "antonnoe/bosbranden",
+          "route": "/api/danger"
+        }
       ],
       "bronnen": [
         "https://meteofrance.com/meteo-des-forets",
@@ -178,7 +195,8 @@
         "J1 BETEKENT HIER VANDAAG en J2 morgen. Bij Vigilance betekent J vandaag en J1 morgen. Wie die twee tellingen door elkaar haalt, schuift een hele kaart een dag op.",
         "De respons is puntkomma-CSV, geen JSON. Dat bleek pas bij de eerste echte aanroep.",
         "Niveau 1 betekent 'laag risico', niet 'geen risico'. Dat is een andere schaal dan de groene 1 van Vigilance, die wél 'geen bijzonderheid' betekent. Nooit in dezelfde legenda zetten."
-      ]
+      ],
+      "statusToelichting": null
     },
     {
       "id": "mf-climatologie",
@@ -187,7 +205,7 @@
       "categorie": "Weer & Waarschuwingen",
       "beschrijving": "Historische klimaatgegevens van de Franse meetstations.",
       "portaal": "meteofrance",
-      "basepath": null,
+      "basepath": "https://public-api.meteofrance.fr/public/DPClim/v1",
       "endpoints": [],
       "authenticatie": "API Key (JWT) in de header 'apikey' — zie portaal meteofrance",
       "sleutelregels": "Zie portaal meteofrance. Valt onder dezelfde applicatie als de andere twee.",
@@ -201,9 +219,10 @@
       "gecontroleerdOp": "2026-09-03",
       "status": "ongetest",
       "valkuilen": [
-        "Het abonnement staat er en loopt tot 2028, maar geen enkele tool gebruikt deze API. Er is dus ook nooit een aanroep gedaan: 'ongetest' betekent hier letterlijk dat niemand weet of het werkt.",
-        "Het basepath staat bewust op null. Het patroon van de andere twee laat zich raden, maar de technische naam wijkt bij Météo-France juist af van de catalogusnaam (zie het portaalblok), dus een gok hier zou precies de fout herhalen die bij Vigilance een 404 opleverde. Lees hem af in de catalogus van het portaal voordat je erop bouwt."
-      ]
+        "Het abonnement staat er en loopt tot 2028, maar geen enkele tool gebruikt deze API. Er is dus ook nooit een aanroep gedaan: 'ongetest' betekent hier letterlijk dat niemand weet of hij antwoordt.",
+        "Het basepath is afgelezen uit de portaal-API (veld context bij DonneesPubliquesClimatologie), niet geraden uit het patroon van de buren. Dat onderscheid is hier niet academisch: DonneesPubliquesObservation draait op v2 en niet op v1, dus wie het patroon doortrekt zit soms mis."
+      ],
+      "statusToelichting": "abonnement loopt, maar nooit aangeroepen"
     },
     {
       "id": "ban",
@@ -214,8 +233,14 @@
       "portaal": null,
       "basepath": "https://api-adresse.data.gouv.fr",
       "endpoints": [
-        { "pad": "/search/?q=8+bd+du+port", "levert": "GeoJSON FeatureCollection met adreskandidaten" },
-        { "pad": "/reverse/?lon=2.37&lat=48.35", "levert": "het adres bij een coördinaat" }
+        {
+          "pad": "/search/?q=8+bd+du+port",
+          "levert": "GeoJSON FeatureCollection met adreskandidaten"
+        },
+        {
+          "pad": "/reverse/?lon=2.37&lat=48.35",
+          "levert": "het adres bij een coördinaat"
+        }
       ],
       "authenticatie": "geen",
       "sleutelregels": null,
@@ -231,7 +256,8 @@
       "valkuilen": [
         "IGN Géoplateforme (data.geopf.fr/geocodage) is de aangewezen opvolger. Beide draaien nu naast elkaar; nieuwe tools kunnen beter meteen op Géoplateforme.",
         "Een lege FeatureCollection is een geldig antwoord met status 200. Wie alleen op de statuscode toetst, ziet het verschil niet tussen 'geen treffer' en 'dienst stuk'."
-      ]
+      ],
+      "statusToelichting": null
     },
     {
       "id": "georisques",
@@ -242,7 +268,10 @@
       "portaal": null,
       "basepath": "https://georisques.gouv.fr/api",
       "endpoints": [
-        { "pad": "/v1/gaspar/risques?code_insee=75101", "levert": "de geregistreerde risico's van een gemeente" }
+        {
+          "pad": "/v1/gaspar/risques?code_insee=75101",
+          "levert": "de geregistreerde risico's van een gemeente"
+        }
       ],
       "authenticatie": "geen",
       "sleutelregels": null,
@@ -258,7 +287,8 @@
       "valkuilen": [
         "Dit is naslag achteraf, geen waarschuwing vooraf. Een gemeente met een geregistreerd overstromingsrisico staat niet ónder water; voor de actuele situatie is Vigilance of Vigicrues de bron.",
         "GASPAR-gegevens komen uit besluiten (arrêtés de catastrophe naturelle) en lopen dus achter op de werkelijkheid."
-      ]
+      ],
+      "statusToelichting": null
     },
     {
       "id": "dvf",
@@ -284,13 +314,15 @@
         "https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres/"
       ],
       "codetabellen": null,
-      "gecontroleerdOp": "2026-08-31",
+      "gecontroleerdOp": "2026-09-03",
       "status": "werkt",
       "valkuilen": [
         "GEEN DATA voor de departementen 57 (Moselle), 67 (Bas-Rhin), 68 (Haut-Rhin) en 976 (Mayotte). Die vallen onder een ander kadasterstelsel. Een lege uitkomst daar betekent dus niet 'geen transacties'.",
         "Dit zijn platte bestanden, geen zoek-API: je haalt een hele gemeente per jaar op en filtert zelf.",
-        "De eerder in deze catalogus vermelde route via data.economie.gouv.fr/api/explore gaf op 31-08-2026 een 404 en is vervangen door deze."
-      ]
+        "De eerder in deze catalogus vermelde route via data.economie.gouv.fr/api/explore gaf op 31-08-2026 een 404 en is vervangen door deze.",
+        "Op 03-09-2026 geverifieerd: latest/csv/2025/communes/17/ staat er, met bestanden van 18-05-2026. 'latest' loopt dus enkele maanden achter op vandaag; dat is normaal voor deze bron en geen storing."
+      ],
+      "statusToelichting": null
     },
     {
       "id": "gpu",
@@ -301,7 +333,10 @@
       "portaal": null,
       "basepath": "https://apicarto.ign.fr/api/gpu",
       "endpoints": [
-        { "pad": "/document?partition=DU_75101", "levert": "de stedenbouwkundige documenten van een partitie" }
+        {
+          "pad": "/document?partition=DU_75101",
+          "levert": "de stedenbouwkundige documenten van een partitie"
+        }
       ],
       "authenticatie": "geen",
       "sleutelregels": null,
@@ -318,7 +353,8 @@
       "valkuilen": [
         "Niet elke gemeente heeft haar PLU gedeponeerd. Een leeg antwoord betekent vaak 'niet aangeleverd' en niet 'geen voorschriften'.",
         "Queries over een groot gebied lopen in een timeout. Beperk tot één partitie of perceel tegelijk."
-      ]
+      ],
+      "statusToelichting": null
     },
     {
       "id": "sirene",
@@ -329,11 +365,17 @@
       "portaal": null,
       "basepath": "https://api.insee.fr/api-sirene/3.11",
       "endpoints": [
-        { "pad": "/siret/{siret}", "levert": "één vestiging" },
-        { "pad": "/siren/{siren}", "levert": "één onderneming" }
+        {
+          "pad": "/siret/{siret}",
+          "levert": "één vestiging"
+        },
+        {
+          "pad": "/siren/{siren}",
+          "levert": "één onderneming"
+        }
       ],
       "authenticatie": "sleutel vereist; INSEE-account nodig",
-      "sleutelregels": "Aan te vragen via het INSEE-portaal. Staat niet in deze repo en hoort daar ook niet.",
+      "sleutelregels": "Aan te vragen via het INSEE-portaal; nog niet gedaan. De sleutel staat niet in deze repo en hoort daar ook niet.",
       "limiet": "per account, zie de INSEE-documentatie",
       "abonnementseinde": null,
       "gebruiktDoor": [],
@@ -341,12 +383,14 @@
         "https://www.insee.fr/fr/information/8110192"
       ],
       "codetabellen": null,
-      "gecontroleerdOp": "2026-08-31",
-      "status": "ongetest",
+      "gecontroleerdOp": "2026-09-03",
+      "status": "werkt",
       "valkuilen": [
         "De oude route api.insee.fr/entreprises/sirene/V3 is vervangen door /api-sirene/3.11. Wie de oude gebruikt, loopt vast.",
-        "Status is 'ongetest': de nieuwe route komt uit de INSEE-documentatie en is hier niet met een echte aanroep bevestigd. Reken er niet op tot dat wél is gebeurd."
-      ]
+        "Op 03-09-2026 geverifieerd met GET /siren/552100554: antwoord 401 Unauthorized, niet 404. Dat is het bewijs dat de route bestaat en alleen de sleutel ontbreekt. Een 404 zou het tegenovergestelde hebben betekend.",
+        "Status 'werkt' slaat hier op de route, niet op onze toegang: zonder aangevraagde sleutel komt er nog geen bruikbaar antwoord uit."
+      ],
+      "statusToelichting": "INSEE-sleutel vereist, nog niet aangevraagd"
     }
   ]
 }

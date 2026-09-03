@@ -86,6 +86,7 @@ function toonPortalen(portalen) {
             kaart.appendChild(bp);
         }
 
+        if (p.technischeNamen) kaart.appendChild(blokMetNamen(p.technischeNamen));
         kaart.appendChild(blokMetLijst('Sleutelregels', lijstOf(p.sleutelregels)));
         kaart.appendChild(blokMetLijst('Drie klokken', lijstOf(p.drieKlokken)));
         kaart.appendChild(blokMetLijst('Valkuilen', lijstOf(p.valkuilen), 'valkuilen'));
@@ -106,6 +107,33 @@ function toonPortalen(portalen) {
 
         doel.appendChild(kaart);
     }
+}
+
+/**
+ * De vertaaltabel catalogusnaam → pad. Staat in een uitklapper omdat het een
+ * naslagtabel is en geen leesvoer, maar hij hoort wél bij het portaal en niet
+ * bij één API: je zoekt hem op wanneer je een basepath nodig hebt en nog niet
+ * weet welke API je gaat gebruiken.
+ */
+function blokMetNamen(namen) {
+    const details = el('details', 'uitklap');
+    const sleutels = Object.keys(namen).filter((k) => !k.startsWith('_'));
+    details.appendChild(el('summary', null, `Technische namen in de URL (${sleutels.length})`));
+
+    if (namen._bron) details.appendChild(el('p', 'codebron', namen._bron));
+    if (namen._let_op) details.appendChild(el('p', 'let-op', namen._let_op));
+
+    const tabel = el('table', 'codetabel namentabel');
+    const tbody = el('tbody');
+    for (const naam of sleutels) {
+        const tr = el('tr');
+        tr.appendChild(el('td', 'code', naam));
+        tr.appendChild(el('td', 'code', namen[naam]));
+        tbody.appendChild(tr);
+    }
+    tabel.appendChild(tbody);
+    details.appendChild(tabel);
+    return details;
 }
 
 /** <details> met een puntenlijst. Dichtgeklapt, zodat de pagina leesbaar blijft. */
@@ -152,7 +180,16 @@ function rijVoorApi(api) {
     naamCel.appendChild(el('div', 'aanbieder', api.aanbieder || ''));
     tr.appendChild(naamCel);
 
-    tr.appendChild(((td) => { td.appendChild(statusVlag(api.status)); return td; })(el('td')));
+    // Status plus de nuance eronder. "werkt" op zichzelf kan misleiden: de
+    // SIRENE-route bestaat aantoonbaar (401, geen 404) maar levert zonder
+    // aangevraagde sleutel nog niets bruikbaars op. Dat verschil hoort in de
+    // tabel te staan en niet alleen in een uitklapper.
+    const statusCel = el('td', 'cel-status');
+    statusCel.appendChild(statusVlag(api.status));
+    if (api.statusToelichting) {
+        statusCel.appendChild(el('div', 'status-toelichting', api.statusToelichting));
+    }
+    tr.appendChild(statusCel);
 
     // Authenticatie: alleen de vorm, nooit een sleutel.
     tr.appendChild(el('td', 'cel-auth', api.authenticatie || 'geen'));
